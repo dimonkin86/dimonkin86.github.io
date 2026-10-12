@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Заучивалка стихов</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@500;700&family=Neucha&display=swap" rel="stylesheet">
+<style>
+:root{--grass:#5d9b3a;--grass2:#3f6f26;--dirt:#79553a;--stone:#8b8b8b;--panel:#c6c6c6;--ink:#222;--hint:#ffd966;--xp:#7cfc00;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--dirt) repeating-conic-gradient(#0000001f 0 25%,#0000 0 50%) 0 0/48px 48px;font-family:'Pixelify Sans','Trebuchet MS',sans-serif;color:var(--ink)}
+header{background:var(--grass);border-bottom:6px solid var(--grass2);padding:10px 12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.logo{font:13px 'Press Start 2P',monospace;color:#fff;text-shadow:2px 2px #000;display:flex;gap:8px;align-items:center}
+#hot{display:flex;gap:4px;flex-wrap:wrap}
+.sl{width:38px;height:38px;background:#8b8b8b;border:3px solid #373737;box-shadow:inset 2px 2px #c6c6c6;display:grid;place-items:center;font-size:22px}
+.sl.cur{border-color:#fff}
+.xp{flex:1 1 100px;height:16px;background:#222;border:3px solid #000}
+.xp i{display:block;height:100%;width:0;background:var(--xp);transition:width .6s}
+.dl{display:flex;gap:6px;align-items:center;font:10px 'Press Start 2P',monospace;color:#fff;text-shadow:2px 2px #000}
+.dl input{width:90px;padding:0;border:0;background:none;accent-color:#ffd966}
+main{max-width:760px;margin:0 auto;padding:14px}
+.card{background:var(--panel);padding:16px;box-shadow:inset 4px 4px #fff,inset -4px -4px #555;border:4px solid #000}
+h2{font:12px/1.6 'Press Start 2P',monospace;margin:0 0 10px}
+textarea,input{width:100%;font:20px 'Pixelify Sans',sans-serif;padding:10px;border:3px solid #000;background:#fff;color:#111}
+textarea{min-height:240px}
+.btn{font:11px/1.5 'Press Start 2P',monospace;color:#fff;text-shadow:2px 2px #333;background:var(--stone);border:3px solid #000;padding:12px 14px;margin:8px 8px 0 0;cursor:pointer;box-shadow:inset -4px -4px #555,inset 4px 4px #c6c6c6}
+.btn:hover{background:#6f7fb8}
+.btn:active{transform:translateY(2px)}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.btn.g{background:var(--grass);box-shadow:inset -4px -4px var(--grass2),inset 4px 4px #8fd45c}
+.btn.g:hover{background:#6fb347}
+#lab{font:10px/1.7 'Press Start 2P',monospace;color:#444;margin-bottom:6px}
+.poem{font-family:'Comic Sans MS','Comic Sans','Chalkboard SE','Neucha',sans-serif;font-size:clamp(22px,5.2vw,32px);line-height:1.75;padding:6px 2px;font-weight:400}
+.w{display:inline-block;margin:0 .2em;filter:blur(.3em);transition:filter .3s,background .3s;user-select:none}
+.w.o{filter:none}
+.w.h{filter:none;background:var(--hint);padding:0 .15em}
+#msg{font-size:21px;margin:10px 0 0;min-height:1.4em}
+.score{font:20px/1.6 'Press Start 2P',monospace;margin:8px 0}
+.typ{display:flex;gap:6px;margin-top:12px}
+.typ .btn{margin:0;flex:none}
+.hid{display:none!important}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:50}
+#ach{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-160%);transition:transform .5s;background:#222;border:4px solid #fff;color:#fff;padding:10px 16px;z-index:60;display:flex;gap:12px;align-items:center;font:10px/1.8 'Press Start 2P',monospace;max-width:92vw}
+#ach.on{transform:translate(-50%,0)}
+</style></head><body>
+<canvas id="fx"></canvas><div id="ach"></div>
+<header><div class="logo" id="logo"></div><div id="hot"></div><div class="xp" title="Опыт"><i id="xpb"></i></div><label class="dl" title="Сколько секунд ждать перед подсказкой">⏱ <input type="range" id="dl" min="5" max="15" step="1" value="5"><b id="dv">5</b>с</label><button class="btn" id="mu" style="margin:0;padding:8px" aria-label="Звук">🔊</button></header>
+<main>
+<section id="s0" class="card"><h2>Вставь стихотворение</h2>
+<textarea id="ta" placeholder="Вставь сюда весь стих. Строфы раздели пустой строкой (если пустых строк нет, возьмём по 4 строки)."></textarea>
+<button class="btn g" id="ok">⛏ Запомнить</button><button class="btn" id="ex">Пример</button><button class="btn" id="mic">🎤 Тест микрофона</button>
+<div id="mt" class="hid" style="margin-top:14px;padding:10px;background:#fff;border:3px solid #000"><div id="mts" style="font-size:20px;line-height:1.4"></div><input id="mti" readonly placeholder="Здесь появится услышанное слово" style="margin-top:8px"><div id="mtr" style="margin-top:6px;font-size:18px"></div></div></section>
+<section id="s1" class="card hid"><div id="lab"></div><div class="poem" id="poem"></div><div id="msg"></div>
+<div class="typ hid" id="typ"><input id="ti" placeholder="Диктуй через 🎤 на клавиатуре или пиши слова" autocomplete="off"><button class="btn g" id="go" aria-label="Очистить">✖</button></div>
+<div id="ctl"></div><button class="btn" id="chg">✏ Другой стих</button></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const PASS=7,TIER=[['💎','Алмаз'],['🥇','Золото'],['🪵','Дерево']];
+const SAMPLE="У лукоморья дуб зелёный;\nЗлатая цепь на дубе том:\nИ днём и ночью кот учёный\nВсё ходит по цепи кругом;\n\nИдёт направо — песнь заводит,\nНалево — сказку говорит.\nТам чудеса: там леший бродит,\nРусалка на ветвях сидит;";
+let S,R,rec,noMic=0,mute=0,AC,tt,DELAY=5;try{DELAY=Math.min(15,Math.max(5,+localStorage.getItem('mcdelay')||5))}catch(e){}
+const clean=w=>w.toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]/g,'');
+const norm=s=>s.split(/\s+/).map(clean).filter(Boolean);
+const lev=(a,b)=>{const d=[];for(let i=0;i<=a.length;i++)d[i]=[i];for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]};
+const match=(a,b)=>a===b||(b.length>=5&&Math.abs(a.length-b.length)<=1&&lev(a,b)<=1);
+const sc=()=>Math.max(0,10-(R.h>>1));
+const CR=['........','........','.XX..XX.','.XX..XX.','...XX...','..XXXX..','..XXXX..','..X..X..'];
+const cr=z=>`<svg width="${z}" height="${z}" viewBox="0 0 8 8" shape-rendering="crispEdges" style="vertical-align:middle">`+CR.map((r,y)=>[...r].map((c,x)=>`<rect x="${x}" y="${y}" width="1" height="1" fill="${c=='X'?'#111':(x+y)%3?'#5cb338':'#4a9a2c'}"/>`).join('')).join('')+'</svg>';
+$('logo').innerHTML=cr(30)+' ЗАУЧИВАЛКА';
+try{$('ta').value=localStorage.getItem('mcpoem')||''}catch(e){}
+
+/* звук */
+function tone(f,d=.12,t='square',v=.06,dl=0){if(mute)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+dl;o.type=t;o.frequency.value=f;o.connect(g);g.connect(AC.destination);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.0001,s+d);o.start(s);o.stop(s+d)}catch(e){}}
+const fan=()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.25,'square',.07,i*.14));
+$('mu').onclick=()=>{mute=!mute;$('mu').textContent=mute?'🔇':'🔊'};
+$('dl').value=DELAY;$('dv').textContent=DELAY;
+$('dl').oninput=()=>{DELAY=+$('dl').value;$('dv').textContent=DELAY;try{localStorage.setItem('mcdelay',DELAY)}catch(e){}if(R&&R.on)arm()};
+
+/* эффекты */
+const cv=$('fx'),cx=cv.getContext('2d');let P=[],run=0;
+function boom(x,y,cols,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,v=2+Math.random()*5;P.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-2,l:1,c:cols[i%cols.length],s:5+(Math.random()*6|0)})}if(!run){run=1;requestAnimationFrame(tick)}}
+function tick(){cv.width=innerWidth;cv.height=innerHeight;P=P.filter(p=>p.l>0);for(const p of P){p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.l-=.012;cx.globalAlpha=Math.max(p.l,0);cx.fillStyle=p.c;cx.fillRect(p.x,p.y,p.s,p.s)}if(P.length)requestAnimationFrame(tick);else run=0}
+function fire(){const C=['#ff5555','#ffd23f','#7cfc00','#55ffff','#ff55ff','#ffffff'];let k=0;const iv=setInterval(()=>{boom(innerWidth*(.15+Math.random()*.7),innerHeight*(.1+Math.random()*.4),[C[k%6],C[(k+2)%6],'#fff'],60);tone(200+Math.random()*300,.2,'sawtooth',.04);if(++k>16)clearInterval(iv)},300)}
+function toast(i,a,b){$('ach').innerHTML=`<span style="font-size:28px">${i}</span><div>${a}<br><span style="color:#ffd966">${b}</span></div>`;$('ach').classList.add('on');clearTimeout(tt);tt=setTimeout(()=>$('ach').classList.remove('on'),3800)}
+
+/* интерфейс */
+const show=id=>['s0','s1'].forEach(k=>$(k).classList.toggle('hid',k!==id));
+const msg=h=>$('msg').innerHTML=h;
+function ctl(a){const c=$('ctl');c.innerHTML='';a.forEach(([t,k,f])=>{const b=document.createElement('button');b.className='btn '+k;b.textContent=t;b.onclick=f;c.appendChild(b)})}
+function hot(){$('hot').innerHTML=S.st.map((_,i)=>`<div class="sl${i===S.i?' cur':''}" title="Строфа ${i+1}">${S.it[i]!=null?TIER[S.it[i]][0]:''}</div>`).join('');$('xpb').style.width=(S.lr/S.st.length*100)+'%'}
+function parse(t){let b=t.replace(/\r/g,'').split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean).map(x=>x.split('\n').map(l=>l.trim()).filter(Boolean));
+if(b.length===1&&b[0].length>4){const L=b[0];b=[];for(let i=0;i<L.length;i+=4)b.push(L.slice(i,i+4))}
+return b.map(ls=>{const T=[];ls.forEach(l=>{const ws=l.split(/\s+/);ws.forEach((w,i)=>T.push({t:w,n:clean(w),br:i===ws.length-1?1:0}))});return T})}
+function draw(open){const p=$('poem');p.innerHTML='';R.T.forEach((w,i)=>{const s=document.createElement('span');s.className='w'+(open||!w.n?' o':'');s.textContent=w.t;p.appendChild(s);R.S[i]=s;for(let k=0;k<w.br;k++)p.appendChild(document.createElement('br'))})}
+
+/* раунд */
+function stop(){mstop();if(R){R.on=false;clearTimeout(R.tm)}const r=rec;rec=null;if(r){r.onend=null;r.onresult=null;try{r.abort()}catch(e){}}}
+const mk=(T,k,l)=>R={T,k,l,pos:0,h:0,on:false,a:false,S:[]};
+function startStanza(i,k){stop();S.i=i;show('s1');mk(S.st[i].map(w=>({...w})),k,(k==='r'?'🎲 Случайная строфа':'Строфа '+(i+1)+' из '+S.st.length));draw(true);hot();
+$('lab').textContent=R.l+' · Шаг 1: читай вслух';msg('Прочитай вслух 3 раза 📢 а потом жми «Готов»');$('typ').classList.add('hid');ctl([['Готов! 🙈','g',ready]])}
+function startTest(){stop();show('s1');S.i=-1;hot();mk(S.st.flatMap((st,i)=>st.map((w,j)=>({...w,br:j===st.length-1&&i<S.st.length-1?2:w.br}))),'t','🏆 ТЕСТ');draw(false);ready()}
+function rnd(){let j;do{j=Math.random()*S.st.length|0}while(j===S.i&&S.st.length>1);startStanza(j,'r')}
+function ready(){ic=0;$('ti').value='';R.S.forEach((s,i)=>{if(R.T[i].n)s.classList.remove('o')});R.on=true;while(R.T[R.pos]&&!R.T[R.pos].n)R.pos++;
+$('lab').textContent=R.l+(R.k==='t'?' · расскажи весь стих по памяти':' · Шаг 2: говори по памяти');$('typ').classList.remove('hid');
+msg('Говори по памяти — слова откроются сами! 🎤');ctl([['💡 Подсказка','',hint]]);
+if(SR)listen();else{msg('Микрофон здесь недоступен — пиши слова в поле ниже ⌨️ (голос лучше всего работает в Chrome)');arm()}}
+function arm(){clearTimeout(R.tm);R.a=true;R.tm=setTimeout(hint,DELAY*1000)}
+function adv(){R.pos++;while(R.pos<R.T.length&&!R.T[R.pos].n)R.pos++;if(R.pos>=R.T.length){fin();return false}return true}
+function hint(){if(!R.on)return;R.S[R.pos].classList.add('h');R.h++;tone(220,.15,'sawtooth');if(R.k==='t')msg('Оценка сейчас: '+sc()+'/10');if(adv())arm()}
+function feed(l,c){let j=c;while(j<l.length&&R.on){if(match(l[j],R.T[R.pos].n)){R.S[R.pos].classList.add('o');tone(660+R.pos%5*60,.08);c=j+1;j=c;if(!adv())return c;arm()}else j++}return c}
+function listen(){const r=new SR();r.lang='ru-RU';r.continuous=true;r.interimResults=true;let c=0;
+r.onstart=()=>{if(!R.a)arm()};
+r.onresult=e=>{let s='';for(let i=0;i<e.results.length;i++)s+=e.results[i][0].transcript+' ';c=feed(norm(s),c)};
+r.onerror=e=>{if(/not-allowed|service-not-allowed|audio-capture/.test(e.error)){noMic=1;msg('Микрофон не включился 😕 Диктуй через 🎤 на клавиатуре в поле ниже (или жми «Другой стих» и проверь микрофон кнопкой «Тест микрофона»)');if(R&&!R.a)arm()}};
+r.onend=()=>{if(rec===r&&R&&R.on&&!noMic)setTimeout(()=>{if(rec===r&&R.on)listen()},250)};
+rec=r;try{r.start()}catch(e){}}
+let ic=0;
+$('go').onclick=()=>{$('ti').value='';ic=0};
+$('ti').oninput=()=>{if(R&&R.on)ic=feed(norm($('ti').value),ic)};
+$('ti').onkeydown=e=>{if(e.key==='Enter')$('go').click()};
+function fin(){stop();$('typ').classList.add('hid');R.k==='t'?testDone():stanzaDone()}
+function stanzaDone(){const i=S.i,k=R.k,t=R.h===0?0:R.h<=2?1:2;if(S.it[i]==null||t<S.it[i])S.it[i]=t;if(k==='s')S.lr=Math.max(S.lr,i+1);hot();
+tone(784,.15);tone(1047,.3,'square',.06,.15);boom(innerWidth/2,innerHeight/3,['#7cfc00','#b6ff6a','#ffffff'],36);
+toast(TIER[t][0],'Достижение получено!','Строфа '+(i+1)+': '+TIER[t][1]);
+msg(['Идеально! Ни одной подсказки! 🌟','Отлично! Почти без подсказок 👍','Получилось! Повтори ещё раз — и будет золото 💪'][t]);
+const b=[];if(k==='s'&&i<S.st.length-1)b.push(['Дальше ➡','g',()=>startStanza(i+1,'s')]);else b.push(['🎲 Случайное','g',rnd],['🏆 ТЕСТ','g',startTest]);
+b.push(['↺ Ещё раз','',()=>startStanza(i,k)]);ctl(b)}
+function testDone(){const s=sc(),ok=s>=PASS;
+msg(`<div class="score">Оценка: ${s}/10</div>Подсказок: ${R.h}. `+(ok?cr(36)+' ТЫ СПРАВИЛСЯ! Настоящий мастер стихов!':'Неплохо! Потренируйся ещё — и будет праздник!'));
+if(ok){fire();fan();toast('🏆','Достижение получено!','Мастер-поэт: '+s+'/10');S.lr=S.st.length;hot()}
+ctl([['🏆 Ещё раз ТЕСТ','g',startTest],['🎲 Тренировка','',rnd]])}
+
+$('ok').onclick=()=>{const t=$('ta').value.trim(),st=parse(t);if(!st.length){$('ta').focus();return}try{localStorage.setItem('mcpoem',t)}catch(e){}S={st,i:0,lr:0,it:[]};startStanza(0,'s')};
+$('ex').onclick=()=>$('ta').value=SAMPLE;
+let mr;
+function mstop(){const r=mr;mr=null;if(r){r.onend=null;r.onresult=null;try{r.abort()}catch(e){}}}
+async function mtest(){mstop();const w=['привет','алмаз','кошка','дерево'][Math.random()*4|0],st=$('mts'),inp=$('mti'),say=h=>st.innerHTML=h;$('mt').classList.remove('hid');inp.value='';$('mtr').innerHTML='';
+let info='Окно: '+(window.top!==window.self?'внутри рамки (iframe)':'отдельная вкладка')+' · адрес: '+location.protocol+' · '+(isSecureContext?'защищённое соединение (https)':'НЕ защищённое соединение');
+try{const p=await navigator.permissions.query({name:'microphone'});info+=' · разрешение: '+p.state}catch(e){}
+info='<small>'+info+'</small>';
+if(!SR){say('❌ Браузер не поддерживает распознавание речи. Нужен Chrome или Edge.<br>'+info);return}
+say('Разреши доступ к микрофону в окне браузера… 🎤');
+try{const s=await navigator.mediaDevices.getUserMedia({audio:true});s.getTracks().forEach(t=>t.stop())}
+catch(e){say('❌ Микрофон не дал доступ: <b>'+e.name+'</b>. '+({NotAllowedError:'Браузер не разрешает микрофон этой странице. Так бывает, если страница открыта из файла или внутри чата, даже когда в настройках Chrome всё включено. Нужна обычная https-ссылка. А пока диктуй голосом через 🎤 на клавиатуре в поле ввода.',NotFoundError:'Микрофон не найден.',NotReadableError:'Микрофон занят другой программой.'}[e.name]||'')+'<br>'+info);return}
+noMic=0;say('✅ Доступ есть! Скажи слово: <b style="font-size:1.3em">«'+w+'»</b><br>'+info);
+const r=new SR();r.lang='ru-RU';r.continuous=true;r.interimResults=true;mr=r;
+r.onresult=e=>{let s='';for(let i=0;i<e.results.length;i++)s+=e.results[i][0].transcript+' ';s=s.trim();inp.value=s;if(norm(s).some(x=>match(x,w))){say('✔ <b>Тест пройден!</b> Микрофон и распознавание работают.');$('mtr').innerHTML='Услышал: «'+s+'»';tone(784,.15);tone(1047,.3,'square',.06,.15);mstop()}else $('mtr').innerHTML='Услышал «'+s+'» — микрофон работает 👍 Скажи именно «'+w+'»'};
+r.onerror=e=>{if(e.error==='no-speech'||e.error==='aborted')return;say('❌ Ошибка распознавания: <b>'+e.error+'</b>'+(e.error==='not-allowed'?' — браузер запретил распознавание речи (в рамке/iframe так бывает). Открой ссылку отдельной вкладкой.':e.error==='network'?' — нет связи с сервисом распознавания.':'')+'<br>'+info);if(/not-allowed|service|network|audio/.test(e.error))mstop()};
+r.onend=()=>{if(mr===r)setTimeout(()=>{if(mr===r)try{r.start()}catch(e){}},250)};
+try{r.start()}catch(e){}}
+$('mic').onclick=mtest;
+$('chg').onclick=()=>{stop();show('s0')};
+</script></body></html>
