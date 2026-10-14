@@ -38,6 +38,12 @@ textarea{min-height:240px}
 .score{font:20px/1.6 'Press Start 2P',monospace;margin:8px 0}
 .typ{display:flex;gap:6px;margin-top:12px}
 .typ .btn{margin:0;flex:none}
+.hmw{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.hmw>div{width:220px}
+#hr{width:100%;padding:0;border:0;background:none;accent-color:var(--grass);height:30px;margin:0}
+.hmt{display:flex;justify-content:space-between;font:11px 'Press Start 2P',monospace;padding:0 4px}
+.hmt span{cursor:pointer;padding:6px 4px}
+#hl{font:10px/1.7 'Press Start 2P',monospace;max-width:230px}
 #pt{text-align:center;margin-top:12px}
 #pm{width:84px;height:84px;margin:0 auto 8px;display:grid;place-items:center;font-size:44px;background:#555;border:4px solid #000;box-shadow:inset 3px 3px #777;filter:grayscale(1) opacity(.6)}
 #pm.on{background:var(--grass);box-shadow:inset 3px 3px #8fd45c,0 0 24px #7cfc00;filter:none}
@@ -54,7 +60,7 @@ textarea{min-height:240px}
 <textarea id="ta" placeholder="Вставь сюда весь стих. Строфы раздели пустой строкой (если пустых строк нет, возьмём по 4 строки)."></textarea>
 <button class="btn g" id="ok">⛏ Запомнить</button><button class="btn" id="ex">Пример</button><button class="btn g" id="tt0">🏆 ТЕСТ</button><button class="btn" id="mic">🎤 Тест микрофона</button>
 <div id="mt" class="hid" style="margin-top:14px;padding:10px;background:#fff;border:3px solid #000"><div id="mts" style="font-size:20px;line-height:1.4"></div><input id="mti" readonly placeholder="Здесь появится услышанное слово" style="margin-top:8px"><div id="mtr" style="margin-top:6px;font-size:18px"></div></div></section>
-<section id="s1" class="card hid"><button class="btn" id="hm" style="margin:0 0 8px"></button><div id="lab"></div><div class="poem" id="poem"></div><div id="msg"></div>
+<section id="s1" class="card hid"><div id="hm" class="hmw"><div><input type="range" id="hr" min="0" max="3" step="1" value="3" aria-label="Как учить строфу"><div class="hmt"><span data-v="0">1</span><span data-v="1">2</span><span data-v="2">1/2</span><span data-v="3">всё</span></div></div><b id="hl"></b></div><div id="lab"></div><div class="poem" id="poem"></div><div id="msg"></div>
 <div id="pt" class="hid"><div id="pm">🎤</div><button class="btn g" id="pb">✋ Держи и говори</button></div>
 <div class="typ hid" id="typ"><input id="ti" placeholder="Диктуй через 🎤 на клавиатуре или пиши слова" autocomplete="off"><button class="btn g" id="go" aria-label="Очистить">✖</button></div>
 <div id="ctl"></div><button class="btn g" id="tst">🏆 ТЕСТ</button><button class="btn" id="chg">✏ Другой стих</button></section>
@@ -102,12 +108,13 @@ function draw(open){const p=$('poem');p.innerHTML='';R.T.forEach((w,i)=>{const s
 /* раунд */
 function stop(){mstop();held=0;$('pm').classList.remove('on');if(R){R.on=false;clearTimeout(R.tm)}const r=rec;rec=null;if(r){r.onend=null;r.onresult=null;try{r.abort()}catch(e){}}}
 const mk=(T,k,l)=>R={T,k,l,pos:0,h:0,on:false,a:false,S:[]};
-let G,HALF=0;try{HALF=+localStorage.getItem('mchalf')||0}catch(e){}
-function segs(st){const n=st.filter(w=>w.br).length,len=st.length;if(!HALF||n<2)return[[0,len]];let c=0,m=len;for(let j=0;j<len;j++)if(st[j].br&&++c===Math.ceil(n/2)){m=j+1;break}return[[0,m],[m,len],[0,len]]}
-const hmb=()=>$('hm').textContent=HALF?'✂ Учу по половинкам':'📖 Учу строфу целиком';
+let G,MODE=3;try{const m=localStorage.getItem('mcmode');MODE=m!=null?+m:(localStorage.getItem('mchalf')==='1'?2:3)}catch(e){}
+function segs(st){const len=st.length,E=[];st.forEach((w,j)=>{if(w.br)E.push(j+1)});const n=E.length;if(MODE>2||n<2)return[[0,len]];const c=MODE===2?Math.ceil(n/2):MODE+1,o=[];let a=0;for(let k=c;;k+=c){const e=Math.min(k,n);o.push([a,E[e-1]]);a=E[e-1];if(e>=n)break}return o.length<2?[[0,len]]:[...o,[0,len]]}
+const ML=['учу по одной строчке','учу по две строчки','учу по половинкам','учу строфу целиком'];
+const hmb=()=>{$('hr').value=MODE;$('hl').textContent=ML[MODE]};
 function startStanza(i,k){G={i,k,sg:segs(S.st[i]),si:0};startSeg(0)}
 function startSeg(si){stop();G.si=si;const g=G.sg[si],i=G.i,k=G.k;S.i=i;show('s1');hmb();$('hm').classList.remove('hid');
-mk(S.st[i].slice(g[0],g[1]).map(w=>({...w})),k,(k==='r'?'🎲 Случайная строфа':'Строфа '+(i+1)+' из '+S.st.length)+(G.sg.length>1?(si<2?' · половинка '+(si+1):' · вся строфа'):''));draw(true);hot();
+mk(S.st[i].slice(g[0],g[1]).map(w=>({...w})),k,(k==='r'?'🎲 Случайная строфа':'Строфа '+(i+1)+' из '+S.st.length)+(G.sg.length>1?(si<G.sg.length-1?' · '+['строчка ','пара строк ','половинка '][MODE]+(si+1)+(MODE<2?'/'+(G.sg.length-1):''):' · вся строфа'):''));draw(true);hot();
 $('lab').textContent=R.l+' · Шаг 1: читай вслух';msg('Прочитай вслух 3 раза 📢 а потом жми «Готов»');$('typ').classList.add('hid');$('pt').classList.add('hid');ctl([['Готов! 🙈','g',ready],['🏆 Тест строфы','',startQ]])}
 function startQ(){stop();$('hm').classList.add('hid');mk(S.st[G.i].map(w=>({...w})),'q','🏆 Тест строфы '+(G.i+1));draw(false);ready()}
 function startTest(){stop();show('s1');S.i=-1;hot();$('hm').classList.add('hid');mk(S.st.flatMap((st,i)=>st.map((w,j)=>({...w,br:j===st.length-1&&i<S.st.length-1?2:w.br}))),'t','🏆 ТЕСТ');draw(false);ready()}
@@ -131,7 +138,7 @@ $('go').onclick=()=>{$('ti').value='';ic=0};
 $('ti').oninput=()=>{if(R&&R.on)ic=feed(norm($('ti').value),ic)};
 $('ti').onkeydown=e=>{if(e.key==='Enter')$('go').click()};
 function fin(){stop();$('typ').classList.add('hid');$('pt').classList.add('hid');R.k==='t'?testDone():R.k==='q'?qDone():G.si<G.sg.length-1?segDone():stanzaDone()}
-function segDone(){const si=G.si;tone(784,.15);boom(innerWidth/2,innerHeight/3,['#7cfc00','#ffffff'],16);msg('Часть готова ✔ '+(si===0?'Теперь вторая половинка!':'Теперь вся строфа целиком!'));ctl([['Дальше ➡','g',()=>startSeg(si+1)],['↺ Ещё раз','',()=>startSeg(si)]])}
+function segDone(){const si=G.si;tone(784,.15);boom(innerWidth/2,innerHeight/3,['#7cfc00','#ffffff'],16);msg('Часть готова ✔ '+(si<G.sg.length-2?'Идём дальше!':'Теперь вся строфа целиком!'));ctl([['Дальше ➡','g',()=>startSeg(si+1)],['↺ Ещё раз','',()=>startSeg(si)]])}
 function qDone(){const s=sc(),i=G.i,ok=s>=PASS,t=R.h===0?0:R.h<=2?1:2;
 msg(`<div class="score">Оценка: ${s}/10</div>Подсказок: ${R.h}. `+(ok?cr(36)+' Строфа выучена!':'Пока не идеально. Давай поучим строфу!'));
 if(ok){if(S.it[i]==null||t<S.it[i])S.it[i]=t;S.lr=Math.max(S.lr,S.it.filter(x=>x!=null).length);hot();tone(784,.15);tone(1047,.3,'square',.06,.15);boom(innerWidth/2,innerHeight/3,['#7cfc00','#b6ff6a','#ffffff'],36);toast(TIER[t][0],'Достижение получено!','Строфа '+(i+1)+': '+TIER[t][1])}
@@ -169,7 +176,11 @@ $('mic').onclick=mtest;
 $('chg').onclick=()=>{stop();show('s0')};
 $('tst').onclick=startTest;
 $('tt0').onclick=()=>{const t=$('ta').value.trim(),st=parse(t);if(!st.length){$('ta').focus();return}try{localStorage.setItem('mcpoem',t)}catch(e){}S={st,i:0,lr:0,it:[]};startTest()};
-$('hm').onclick=()=>{HALF=HALF?0:1;try{localStorage.setItem('mchalf',HALF)}catch(e){}hmb();if(G&&R&&R.k!=='t'&&R.k!=='q')startStanza(G.i,G.k)};
+const pick=v=>{MODE=+v;try{localStorage.setItem('mcmode',MODE)}catch(e){}hmb();if(G&&R&&R.k!=='t'&&R.k!=='q')startStanza(G.i,G.k)};
+$('hr').oninput=()=>{$('hl').textContent=ML[$('hr').value]};
+$('hr').onchange=()=>pick($('hr').value);
+document.querySelectorAll('.hmt span').forEach(s=>s.onclick=()=>pick(s.dataset.v));
+hmb();
 let held=0,PTT=0;try{PTT=+localStorage.getItem('mcptt')||0}catch(e){}
 function killRec(){const r=rec;rec=null;if(r){r.onend=null;r.onresult=null;try{r.abort()}catch(e){}}}
 const mmb=()=>$('mm').textContent=PTT?'✋ кнопка':'🎤 авто';mmb();
